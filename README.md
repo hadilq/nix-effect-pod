@@ -18,8 +18,11 @@ So this is my argument to prefer `podman` over NixOS containers, because I am a 
 so I cannot declare the definition of containers upfront.
 
 ## In practice - usage
-I am using it as [my configuration](https://github.com/hadilq/nix-home-manager-config),
-so that would be some examples and how to use.
+Checkout [development pod](https://github.com/hadilq/nix-effect-pod/tree/main/development),
+and [firefox pod](https://github.com/hadilq/nix-effect-pod/tree/main/firefox).
+
+Also, I am using it as [my configuration](https://github.com/hadilq/nix-home-manager-config),
+so there would be some examples and usages.
 
 # Known problems
 There are some FIXME in the code that I have no clue how to solve them!

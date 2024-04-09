@@ -4,7 +4,7 @@ let
   pkgsSource = builtins.fetchTarball "https://github.com/NixOS/nixpkgs/archive/d7329da4b1cd24f4383455071346f4f81b7becba.tar.gz";
   # release-23.11
   homeManagerSource = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/d6bb9f934f2870e5cbc5b94c79e9db22246141ff.tar.gz";
-  name = "dev-machine";
+  name = "dev-test-machine";
   nixosConfigurationSource = ./configuration.nix;
   podProfileDirPath = ./.;
   homeManagerConfigurationSource = ./home.nix;
