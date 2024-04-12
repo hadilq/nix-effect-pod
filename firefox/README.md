@@ -1,5 +1,5 @@
 # Pod for development
-The code in this directory can create a pod(docker or podman) image and integrate Nixos,
+The code in this directory can create a container(via docker or podman) image and integrate Nixos,
 and home-manager, into it. The way I use it is explained below.
 
 # Usage
@@ -10,7 +10,7 @@ $ nix-build pod.nix &&\
   podman load < result
 ```
 
-To build the image. Befor launching the container you need to authorize podman to use display.
+To build the image. Before launching the container you need to authorize podman to use display.
 So you have to run
 
 ```shell
@@ -26,21 +26,21 @@ $ podman run -td --rm --volume=${DOWNLOAD_DIR}:/home/dev/Download\
   --volume=/tmp/.X11-unix/:/tmp/.X11-unix/ --volume="$XAUTH:$XAUTH"\
   -e DISPLAY=$DISPLAY -e XAUTHORITY="$XAUTH"\
   --user $(id -u):$(id -g) --userns keep-id:uid=$(id -u),gid=$(id -g)\
-  --name=firefox-test-pod firefox-test-machine:latest
+  --name=firefox-test firefox-test-machine:latest
 ```
 
-To launch the firefox run
+To launch the Firefox run
 
 ```shell
-$ tmux neww podman exec -it firefox-test-pod firefox
+$ tmux neww podman exec -it firefox-test firefox
 ```
 
-Now you have an isolated firefox!
+Now you have an isolated Firefox!
 If you don't use `tmux` just remove `tmux neww` and you are good to go.
 
 Don't forget to stop and possibly remove the container.
 ```shell
-$ podman stop firefox-test-pod
+$ podman stop firefox-test
 ```
 
 Enjoy!

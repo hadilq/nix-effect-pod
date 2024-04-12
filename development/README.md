@@ -1,5 +1,5 @@
 # Pod for development
-The code in this directory can create a pod(docker or podman) image and integrate Nixos,
+The code in this directory can create a container(via docker or podman) image and integrate Nixos,
 and home-manager, into it. The way I use it is explained below.
 
 # Usage
@@ -15,13 +15,13 @@ To build the image. To launch the container use the following:
 ```shell
 $ podman run -td --rm --volume=${PWD}:/home/dev/src \
   --user $(id -u):$(id -g) --userns keep-id:uid=$(id -u),gid=$(id -g)\
-  --name=dev-test-pod dev-test-machine:latest
+  --name=dev-test dev-test-machine:latest
 ```
 
-I prefer to have my development environemtn in tmux so I usually run
+I prefer to have my development environment in tmux, so I usually run
 
 ```shell
-$ tmux neww podman exec -it dev-test-pod zsh
+$ tmux neww podman exec -it dev-test zsh
 ```
 
 If you don't want tmux, you only need to remove the `tmux neww` part.
@@ -30,7 +30,7 @@ but it's not getting launched! I'll try to fix it in the future,
 but for now just run it in the root shell like
 
 ```shell
-$ tmux neww podman exec -it -ueer root dev-test-pod zsh
+$ tmux neww podman exec -it -ueer root dev-test zsh
 ```
 
 Now you have my configuration for Tmux, Neovim, etc. So let's develop!
@@ -40,8 +40,8 @@ The good thing about them is that they are ordinary Nixos, and home-manager, con
 
 Don't forget to stop and possibly remove the container.
 ```shell
-$ podman stop dev-test-pod
+$ podman stop dev-test
 ```
 
-enjoy!
+Enjoy!
 
