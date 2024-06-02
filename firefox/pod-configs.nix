@@ -1,9 +1,9 @@
 let
   system =  "x86_64-linux";
-  # release-23.11
-  pkgsSource = builtins.fetchTarball "https://github.com/NixOS/nixpkgs/archive/d7329da4b1cd24f4383455071346f4f81b7becba.tar.gz";
-  # release-23.11
-  homeManagerSource = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/d6bb9f934f2870e5cbc5b94c79e9db22246141ff.tar.gz";
+  # release-24.05
+  pkgsSource = builtins.fetchTarball "https://github.com/NixOS/nixpkgs/archive/805a384895c696f802a9bf5bf4720f37385df547.tar.gz";
+  # release-24.05
+  homeManagerSource = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/a631666f5ec18271e86a5cde998cba68c33d9ac6.tar.gz";
   name = "firefox-test-machine";
   nixosConfigurationSource = ./configuration.nix;
   podProfileDirPath = ./.;

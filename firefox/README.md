@@ -1,5 +1,5 @@
 # Pod for development
-The code in this directory can create a container(via docker or podman) image and integrate Nixos,
+The code in this directory can create a container(via Docker or Podman) image and integrate NixOS,
 and home-manager, into it. The way I use it is explained below.
 
 # Usage
@@ -10,7 +10,7 @@ $ nix-build pod.nix &&\
   podman load < result
 ```
 
-To build the image. Before launching the container you need to authorize podman to use display.
+To build the image. Before launching the container you need to authorize Podman to use display.
 So you have to run
 
 ```shell
@@ -22,7 +22,7 @@ To launch the container use the following:
 
 ```shell
 $ export DOWNLOAD_DIR=$(mktemp -d /tmp/firefox-download-XXXX)
-$ podman run -td --rm --volume=${DOWNLOAD_DIR}:/home/dev/Download\
+$ podman run -td --rm --volume=${DOWNLOAD_DIR}:/home/dev/Downloads\
   --volume=/tmp/.X11-unix/:/tmp/.X11-unix/ --volume="$XAUTH:$XAUTH"\
   -e DISPLAY=$DISPLAY -e XAUTHORITY="$XAUTH"\
   --user $(id -u):$(id -g) --userns keep-id:uid=$(id -u),gid=$(id -g)\
