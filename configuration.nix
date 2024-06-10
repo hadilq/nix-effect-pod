@@ -27,7 +27,6 @@
 
   boot.isContainer = true;
   boot.loader.grub.enable = lib.mkForce false;
-  boot.loader.systemd-boot.enable = lib.mkForce false;
   services.journald.console = "/dev/console";
 
   environment.noXlibs = lib.mkForce false;
@@ -61,6 +60,11 @@
   environment.systemPackages = with pkgs; [
     vim
   ];
+
+  environment.sessionVariables = {
+    LANG = "en_US.UTF-8";
+    LC_ALL = "en_US.UTF-8";
+  };
 
   system.stateVersion = "23.11";
 }
