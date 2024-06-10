@@ -26,10 +26,10 @@
   };
 
   boot.isContainer = true;
-  boot.loader.grub.enable = lib.mkForce false;
+  boot.loader.grub.enable = false;
   services.journald.console = "/dev/console";
 
-  environment.noXlibs = lib.mkForce false;
+  environment.noXlibs = false;
   services.xserver = {
     enable = true;
     layout = "us";
