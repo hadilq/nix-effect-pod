@@ -8,6 +8,8 @@
 , etcActivation ? false
 , homeActivation ? false
 , channelsList ? []
+, extraSubstituters ? []
+, extraTrustedPublicKeys ? []
 , pkgs ? (import pkgsSource { inherit system; })
 , lib ? pkgs.lib
 , tag ? "latest"
@@ -179,8 +181,11 @@ let
   defaultNixConf = {
     sandbox = "false";
     build-users-group = "nixbld";
-    trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+    ] ++ extraTrustedPublicKeys;
     experimental-features = [ "nix-command" "flakes" ];
+    substituters = [ "https://cache.nixos.org" ] ++ extraSubstituters;
   };
 
   nixConfContents = (lib.concatStringsSep "\n" (lib.mapAttrsFlatten (n: v:
