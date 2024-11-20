@@ -1,7 +1,7 @@
-# A fork of https://github.com/NixOS/nix/blob/eeecbb9c364a29bbbde26aa41cc74204546950c0/docker.nix
+# A fork of https://github.com/NixOS/nix/blob/82f6fba0d46985c6bf435d7ca0cdfd28746bf052/docker.nix
 { system
 , pkgsSource
-, name
+, name ? "nix"
 , nixosConfigurationSource
 , podProfileDirPath
 , podCommonDirPath ? ./common
@@ -10,28 +10,17 @@
 , channelsList ? []
 , extraSubstituters ? []
 , extraTrustedPublicKeys ? []
-, pkgs ? (import pkgsSource { inherit system; })
-, lib ? pkgs.lib
-, tag ? "latest"
-, username ? "dev"
-, userHome ? "/home/dev"
-, mountingDir ? "${userHome}/src"
-, userConfig ? {
-    uid = 1000;
-    shell = "${pkgs.zsh}/bin/zsh";
-    home = userHome;
-    gid = 1000;
-    groups = [ username ];
-    description = "A normal user";
-  }
-, groupConfig ? {
-    gid = 1000;
-  }
-, maxLayers ? 100
-, nixos ? (import  "${pkgsSource}/nixos" {
+, nixpkgs ? (import  "${pkgsSource}/nixos" {
     inherit system;
     configuration = import nixosConfigurationSource;
   })
+, pkgs ? nixpkgs.pkgs
+, lib ? pkgs.lib
+, tag ? "latest"
+, bundleNixpkgs ? true
+, extraPkgs ? []
+, maxLayers ? 100
+, nixConf ? {}
 , flake-registry ? (pkgs.formats.json { }).generate "flake-registry.json" {
     version = 2;
     flakes = pkgs.lib.mapAttrsToList (n: v: { inherit (v) from to exact; }) ({
@@ -47,6 +36,18 @@
       };
     });
   }
+, uid ? 1000
+, gid ? 1000
+, uname ? "dev"
+, gname ? "dev"
+, mountingDir ? ""
+, userHome ? (lib.optionalAttrs (lib.length mountingDir != 0)
+      (lib.warn
+        "mountingDir argument is deprecated and will be removed."
+        "/home/dev"
+      )
+  )
+
 }:
 let
   defaultPkgs = with pkgs; [
@@ -63,22 +64,22 @@ let
     man
     cacert.out
     findutils
-    xz
-    nixos.config.system.path
-  ];
+    iana-etc
+    git
+    openssh
+    nixpkgs.config.system.path
+  ] ++ extraPkgs;
 
   users = {
 
     root = {
       uid = 0;
-      shell = "${pkgs.zsh}/bin/zsh";
+      shell = "${pkgs.bashInteractive}/bin/bash";
       home = "/root";
       gid = 0;
       groups = [ "root" ];
       description = "System administrator";
     };
-
-    ${username} = userConfig;
 
     nobody = {
       uid = 65534;
@@ -89,6 +90,15 @@ let
       description = "Unprivileged account (don't use!)";
     };
 
+  } // lib.optionalAttrs (uid != 0) {
+    "${uname}" = {
+      uid = uid;
+      shell = "${pkgs.bashInteractive}/bin/bash";
+      home = "/home/${uname}";
+      gid = gid;
+      groups = [ "${gname}" ];
+      description = "Nix user";
+    };
   } // lib.listToAttrs (
     map
       (
@@ -107,9 +117,10 @@ let
 
   groups = {
     root.gid = 0;
-    ${username} = groupConfig;
     nixbld.gid = 30000;
     nobody.gid = 65534;
+  } // lib.optionalAttrs (gid != 0) {
+    "${gname}".gid = gid;
   };
 
   userToPasswd = (
@@ -188,23 +199,12 @@ let
     substituters = [ "https://cache.nixos.org" ] ++ extraSubstituters;
   };
 
-  nixConfContents = (lib.concatStringsSep "\n" (lib.mapAttrsFlatten (n: v:
+  nixConfContents = (lib.concatStringsSep "\n" (lib.attrsets.mapAttrsToList (n: v:
     let
       vStr = if builtins.isList v then lib.concatStringsSep " " v else v;
     in
-      "${n} = ${vStr}") defaultNixConf)) + "\n";
-
-  endpointScript = ''
-    #!${pkgs.bashInteractive}/bin/bash
-
-    cd /nix/var/nix/profiles/default/bin/
-    nix-daemon --daemon &> /dev/null &
-
-    tail -f /dev/null
-  '';
-
-  userGroupIds = "${toString users.${username}.uid}:${toString groups.${username}.gid}";
-
+      "${n} = ${vStr}") (defaultNixConf // nixConf))) + "\n";
+  userGroupIds = "${toString uid}:${toString gid}";
   copyToNixStore = dirname: directory: (pkgs.runCommand dirname {} ''
     mkdir $out
     find ${directory} -type f | while read file; do
@@ -218,11 +218,12 @@ let
 
   baseSystem =
     let
-      nixpkgs = pkgs.path;
-      channel = pkgs.runCommand "channel-nixos" { } ''
+      channel = pkgs.runCommand "channel-nixos" { inherit bundleNixpkgs; } ''
         mkdir $out
-        ln -s ${nixpkgs} $out/nixpkgs
-        echo "[]" > $out/manifest.nix
+        if [ "$bundleNixpkgs" ]; then
+          ln -s ${pkgs.path} $out/nixpkgs
+          echo "[]" > $out/manifest.nix
+        fi
       '';
       nix-channels = pkgs.writeTextFile {
         name = "nix-channels";
@@ -271,13 +272,12 @@ let
     in
     pkgs.runCommand "base-system"
       {
-        inherit passwdContents groupContents shadowContents nixConfContents endpointScript;
+        inherit passwdContents groupContents shadowContents nixConfContents;
         passAsFile = [
           "passwdContents"
           "groupContents"
           "shadowContents"
           "nixConfContents"
-          "endpointScript"
         ];
         allowSubstitutes = false;
         preferLocalBuild = true;
@@ -288,6 +288,7 @@ let
 
       mkdir -p $out/etc/ssl/certs
       ln -s /nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt $out/etc/ssl/certs
+      ln -s /nix/var/nix/profiles $out/etc/profiles
 
       cat $passwdContentsPath > $out/etc/passwd
       echo "" >> $out/etc/passwd
@@ -297,9 +298,6 @@ let
 
       cat $shadowContentsPath > $out/etc/shadow
       echo "" >> $out/etc/shadow
-
-      cat $endpointScriptPath > $out/etc/endpoint.sh
-      ln -s /nix/var/nix/profiles $out/etc/profiles
 
       mkdir -p $out/usr
       ln -s /nix/var/nix/profiles/share $out/usr/
@@ -313,59 +311,68 @@ let
       mkdir -p $out/etc/nix
       cat $nixConfContentsPath > $out/etc/nix/nix.conf
 
-      mkdir -p $out/root
-      mkdir -p $out/nix/var/nix/profiles/per-user/root
+      mkdir -p $out${userHome}
+      mkdir -p $out/nix/var/nix/profiles/per-user/${uname}
 
       ln -s ${profile} $out/nix/var/nix/profiles/default-1-link
       ln -s $out/nix/var/nix/profiles/default-1-link $out/nix/var/nix/profiles/default
-      ln -s /nix/var/nix/profiles/default $out/root/.nix-profile
+      ln -s /nix/var/nix/profiles/default $out${userHome}/.nix-profile
 
-      ln -s ${channel} $out/nix/var/nix/profiles/per-user/root/channels-1-link
-      ln -s $out/nix/var/nix/profiles/per-user/root/channels-1-link $out/nix/var/nix/profiles/per-user/root/channels
+      ln -s ${channel} $out/nix/var/nix/profiles/per-user/${uname}/channels-1-link
+      ln -s $out/nix/var/nix/profiles/per-user/${uname}/channels-1-link $out/nix/var/nix/profiles/per-user/${uname}/channels
 
-      mkdir -p $out/root/.nix-defexpr
-      ln -s $out/nix/var/nix/profiles/per-user/root/channels $out/root/.nix-defexpr/channels
-      ln -s ${nix-channels} $out/root/.nix-channels
-
-      mkdir -p $out${userHome}
       mkdir -p $out${userHome}/.nix-defexpr
-      ln -s $out/nix/var/nix/profiles/per-user/root/channels $out${userHome}/.nix-defexpr/channels
+      ln -s $out/nix/var/nix/profiles/per-user/${uname}/channels $out${userHome}/.nix-defexpr/channels
       ln -s ${nix-channels} $out${userHome}/.nix-channels
 
       mkdir -p $out/bin $out/usr/bin
       ln -s ${pkgs.coreutils}/bin/env $out/usr/bin/env
       ln -s ${pkgs.bashInteractive}/bin/bash $out/bin/sh
 
-      # The ${username}-tmp will be renamed to ${username} in fakeRootCommands script.
-      mkdir -p $out/nix/var/nix/profiles/per-user/${username}-tmp
+    '' + (lib.optionalString homeActivation ''
+      rm $out${userHome}/.nix-profile
+      ln -s /nix/var/nix/profiles/per-user/${uname} $out${userHome}/.nix-profile
 
-      ln -s ${channel} $out/nix/var/nix/profiles/per-user/${username}-tmp/channels-1-link
-      ln -s $out/nix/var/nix/profiles/per-user/${username}-tmp/channels-1-link $out/nix/var/nix/profiles/per-user/${username}-tmp/channels
-
-      HOME_ACTIVATION=${nixos.config.home-manager.users.${username}.home.activationPackage}
-      find ''${HOME_ACTIVATION}/home-path/\
+      HOME_ACTIVATION=${nixpkgs.config.home-manager.users.${uname}.home.activationPackage}
+      ls -al $HOME_ACTIVATION
+      find $HOME_ACTIVATION/home-path/\
         -maxdepth 1 -type d | while read dir; do
-        ln -s $dir $out/nix/var/nix/profiles/per-user/${username}-tmp/$(basename $dir)
+        ln -s $dir $out/nix/var/nix/profiles/per-user/${uname}/$(basename $dir)
       done
-      find ''${HOME_ACTIVATION}/home-path/\
+      find $HOME_ACTIVATION/home-path/\
         -maxdepth 1 -type l | while read slink; do
-        ln -s $slink $out/nix/var/nix/profiles/per-user/${username}-tmp/$(basename $slink)
+        ln -s $slink $out/nix/var/nix/profiles/per-user/${uname}/$(basename $slink)
       done
 
-    '' + (lib.optionalString (flake-registry-path != null) ''
-      nixCacheDir="/root/.cache/nix"
+      homeFiles="$HOME_ACTIVATION/home-files/"
+      find "$homeFiles" -type d | while read dir; do
+        relative=$(echo "$dir" | sed -e "s,^$homeFiles,,")
+        dest=$out${userHome}/"$relative"
+        if [ "$des" ]; then
+          continue
+        fi
+        mkdir -p $dest
+        find $dir -maxdepth 1 | while read file; do
+          if [ ! -d $file ]; then
+            ln -s $file $dest/$(basename $file)
+          fi
+        done
+      done
+
+    '') + (lib.optionalString (flake-registry-path != null) ''
+      nixCacheDir="${userHome}/.cache/nix"
       mkdir -p $out$nixCacheDir
-      globalisNormalUserFlakeRegistryPath="$nixCacheDir/flake-registry.json"
+      globalFlakeRegistryPath="$nixCacheDir/flake-registry.json"
       ln -s ${flake-registry-path} $out$globalFlakeRegistryPath
       mkdir -p $out/nix/var/nix/gcroots/auto
-      rootName=$(${pkgs.nix}/bin/nix --extra-experimental-features nix-command hash file --type sha1 --base32 <(echo -n $globalFlakeRegistryPath))
+      rootName=$(${pkgs.nix}/bin/nix --extra-experimental-features nix-command hash file --type sha1 --base32 ${flake-registry-path})
       ln -s $globalFlakeRegistryPath $out/nix/var/nix/gcroots/auto/$rootName
     ''));
 
 in
 pkgs.dockerTools.buildLayeredImageWithNixDb {
 
-  inherit name tag maxLayers;
+  inherit name tag maxLayers uid gid uname gname;
 
   contents = [ baseSystem ];
 
@@ -373,78 +380,44 @@ pkgs.dockerTools.buildLayeredImageWithNixDb {
     rm -rf nix-support
     ln -s /nix/var/nix/profiles nix/var/nix/gcroots/profiles
   '';
-
   fakeRootCommands = ''
     chmod 1777 tmp
     chmod 1777 var/tmp
-
-    export USER=${username}
-    export HOME=${userHome}
-
-    if [ ${toString etcActivation} ]; then
-      ${nixos.config.system.build.etcActivationCommands}
-    # FIXME(hacky!) It's a symlink, so let's make it properly.
-      mv /nix/var/nix/profiles/per-user/{${username},root}
-    fi
-
-    mv /nix/var/nix/profiles/per-user/{${username}-tmp,${username}}
+    chown -R ${userGroupIds} .${userHome}
+    chown -R ${userGroupIds} ./nix/var/nix/profiles/per-user/${uname}
 
     # copy config files
-    ln -s ${./configuration.nix} /etc/configuration.nix
-    ln -s ${podCommonPath} /etc/common
-
-    # FIXME(hacky!) It should be possible to copy the configs without removing the directory!
-    ln -s ${podNixosPath} /etc/nixos
-
-    if [ ${toString homeActivation} ]; then
-      HOME_ACTIVATION=${nixos.config.home-manager.users.${username}.home.activationPackage}
-      mkdir -p /build
-      $HOME_ACTIVATION/activate
-      # FIXME(hacky!) It's pointing to the per-user/root directory, so this fix it.
-      rm ${userHome}/.nix-profile
-    fi
-
-    ln -s /nix/var/nix/profiles/per-user/${username} ${userHome}/.nix-profile
-
-    chown ${ userGroupIds} /nix/var/nix/profiles/per-user/${username}
-    chown -R ${ userGroupIds} /nix/var/nix/profiles/per-user/${username}
-    chown ${ userGroupIds} ${userHome}
-    find ${userHome} -type d | while read dir; do
-      if [[ $dir != "${mountingDir}" ]] && [[ $dir != ${mountingDir}/* ]]; then
-        chown ${ userGroupIds} $dir
-      fi
-    done
-
-  '';
+    ln -s ${./configuration.nix} ./etc/configuration.nix
+    ln -s ${podCommonPath} ./etc/common
+    ln -s ${podNixosPath} ./etc/nixos
+  '' + (lib.optionalString etcActivation ''
+    mv /nix/var/nix/profiles/per-user/{${uname},${uname}-tmp}
+    ${nixpkgs.config.system.build.etcActivationCommands}
+    mv /nix/var/nix/profiles/per-user/{${uname},root}
+    mv /nix/var/nix/profiles/per-user/{${uname}-tmp,${uname}}
+  '');
 
   enableFakechroot = true;
-
   created = "now";
   config = {
-    Cmd = [ "/nix/var/nix/profiles/default/bin/bash" ];
-    Entrypoint = [ "/nix/var/nix/profiles/default/bin/bash" "/etc/endpoint.sh" ];
-    WorkingDir = userHome;
-    Volumes = { };
+    Cmd = [ "${userHome}/.nix-profile/bin/bash" ];
+    User = "${toString uid}:${toString gid}";
     Env = [
-      "USER=root"
+      "USER=${uname}"
       "PATH=${lib.concatStringsSep ":" [
         "${userHome}/.nix-profile/bin"
-        "/root/.nix-profile/bin"
         "/nix/var/nix/profiles/default/bin"
         "/nix/var/nix/profiles/default/sbin"
       ]}"
       "MANPATH=${lib.concatStringsSep ":" [
         "${userHome}/.nix-profile/share/man"
-        "/root/.nix-profile/share/man"
         "/nix/var/nix/profiles/default/share/man"
       ]}"
       "SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
       "GIT_SSL_CAINFO=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
       "NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
-      "NIX_PATH=/nix/var/nix/profiles/per-user/${username}/channels:${userHome}/.nix-defexpr/channels"
-      "TERM=screen-256color"
+      "NIX_PATH=/nix/var/nix/profiles/per-user/${uname}/channels:${userHome}/.nix-defexpr/channels"
     ];
   };
 
 }
-

@@ -1,9 +1,9 @@
 { homeManagerConfigurationSource
 , homeManagerSource
-, username
+, uname
 , userHome
 }:
-{ config, pkgs, lib, modulesPath, ... }: {
+{ pkgs, modulesPath, ... }: {
   imports = [
     "${toString modulesPath}/virtualisation/docker-image.nix"
     (import "${homeManagerSource}/nixos")
@@ -12,16 +12,17 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    users.${username} = { config, pkgs, lib, ... } :{
+    users.${uname} = { ... } :{
       imports = [
         (import homeManagerConfigurationSource)
       ];
 
       programs.home-manager.enable = true;
-      home.username = username;
+      programs.bash.enable = true;
+      home.username = uname;
       home.homeDirectory = userHome;
 
-      home.stateVersion = "23.11";
+      home.stateVersion = "24.11";
     };
   };
 
@@ -40,7 +41,7 @@
   users = {
     mutableUsers = true;
     users = {
-      ${username} = {
+      ${uname} = {
         isNormalUser = true;
         home = userHome;
         description = "Development";
@@ -60,11 +61,6 @@
   environment.systemPackages = with pkgs; [
     vim
   ];
-
-  environment.variables = {
-    LANG = "en_US.UTF-8";
-    LC_ALL = "en_US.UTF-8";
-  };
 
   system.stateVersion = "24.05";
 }
