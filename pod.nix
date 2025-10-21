@@ -1,20 +1,28 @@
 # A fork of https://github.com/NixOS/nix/blob/82f6fba0d46985c6bf435d7ca0cdfd28746bf052/docker.nix
 {
   system,
+  nixEffectSource,
   pkgsSource,
+  homeManagerSource,
   name ? "nix",
   nixosConfigurationSource,
-  podProfileDirPath,
-  podCommonDirPath ? ./common,
   etcActivation ? false,
   homeActivation ? false,
   channelsList ? [ ],
   extraSubstituters ? [ ],
   extraTrustedPublicKeys ? [ ],
   nixpkgs ? (
-    import "${pkgsSource}/nixos" {
-      inherit system;
-      configuration = import nixosConfigurationSource;
+    let
+      eval = import "${pkgsSource}/nixos/lib/eval-config.nix" {
+        inherit system;
+        modules = [ (import nixosConfigurationSource) ];
+        specialArgs = { inherit nixEffectSource pkgsSource homeManagerSource; };
+      };
+    in
+    {
+      inherit (eval) pkgs config options;
+      system = eval.config.system.build.toplevel;
+      inherit (eval.config.system.build) vm vmWithBootLoader;
     }
   ),
   pkgs ? nixpkgs.pkgs,
@@ -214,18 +222,6 @@ let
     ))
     + "\n";
   userGroupIds = "${toString uid}:${toString gid}";
-  copyToNixStore =
-    dirname: directory:
-    (pkgs.runCommand dirname { } ''
-      mkdir $out
-      find ${directory} -type f | while read file; do
-        dir=''$(dirname $file)
-        mkdir -p $out"''${dir#${directory}}"
-        cp $file "$out''${file#${directory}}"
-      done
-    '');
-  podCommonPath = copyToNixStore "common" podCommonDirPath;
-  podNixosPath = copyToNixStore "nixos" podProfileDirPath;
 
   baseSystem =
     let
@@ -424,8 +420,6 @@ pkgs.dockerTools.buildLayeredImageWithNixDb {
 
     # copy config files
     ln -s ${./configuration.nix} ./etc/configuration.nix
-    ln -s ${podCommonPath} ./etc/common
-    ln -s ${podNixosPath} ./etc/nixos
   ''
   + (lib.optionalString etcActivation ''
     mv /nix/var/nix/profiles/per-user/{${uname},${uname}-tmp}

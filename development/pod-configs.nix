@@ -6,7 +6,6 @@ let
   homeManagerSource = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/1bd5616e33c0c54d7a5b37db94160635a9b27aeb.tar.gz";
   name = "dev-test-machine";
   nixosConfigurationSource = ./configuration.nix;
-  podProfileDirPath = ./.;
   homeManagerConfigurationSource = ./home.nix;
   channelsList = [
     {
@@ -18,7 +17,7 @@ let
       url = "https://github.com/nix-community/home-manager/archive/release-24.11.tar.gz";
     }
   ];
-  username = "dev";
+  uname = "dev";
   userHome = "/home/dev";
   homeActivation = true;
 in
@@ -29,10 +28,9 @@ in
     homeManagerSource
     name
     nixosConfigurationSource
-    podProfileDirPath
     homeManagerConfigurationSource
     channelsList
-    username
+    uname
     userHome
     homeActivation
     ;

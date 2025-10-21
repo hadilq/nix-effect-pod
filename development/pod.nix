@@ -1,18 +1,22 @@
+{
+  nixEffectSource,
+  pkgsSource,
+  homeManagerSource,
+}:
 let
   pod-configs = import ./pod-configs.nix;
   image = (
-    import ../pod.nix {
+    import "${nixEffectSource}/pod.nix" {
       inherit (pod-configs)
         system
-        pkgsSource
         name
         nixosConfigurationSource
         channelsList
-        podProfileDirPath
-        username
+        uname
         userHome
         homeActivation
         ;
+      inherit nixEffectSource pkgsSource homeManagerSource;
     }
   );
 in

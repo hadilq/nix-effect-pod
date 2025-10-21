@@ -6,7 +6,8 @@ and home-manager, into it. The way I use it is explained below.
 Run
 
 ```shell
-$ nix-build pod.nix &&\
+$ cd ROOT_OF_THIS_PROJECT
+$ nix build .#pod.librewolf &&\
   podman load < result
 ```
 
@@ -21,26 +22,26 @@ $ xauth nextract - "$DISPLAY" | sed -e 's/^..../ffff/' | xauth -f "$XAUTH" nmerg
 To launch the container use the following:
 
 ```shell
-$ export DOWNLOAD_DIR=$(mktemp -d /tmp/firefox-download-XXXX)
+$ export DOWNLOAD_DIR=$(mktemp -d /tmp/librewolf-download-XXXX)
 $ podman run -td --rm --volume=${DOWNLOAD_DIR}:/home/dev/Downloads\
   --volume=/tmp/.X11-unix/:/tmp/.X11-unix/ --volume="$XAUTH:$XAUTH"\
   -e DISPLAY=$DISPLAY -e XAUTHORITY="$XAUTH"\
   --user $(id -u):$(id -g) --userns keep-id:uid=$(id -u),gid=$(id -g)\
-  --name=firefox-test firefox-test-machine:latest
+  --name=librewolf-test librewolf-test-machine:latest
 ```
 
-To launch the Firefox run
+To launch the Librewolf run
 
 ```shell
-$ tmux neww podman exec -it firefox-test firefox
+$ tmux neww podman exec -it librewolf-test librewolf
 ```
 
-Now you have an isolated Firefox!
+Now you have an isolated Librewolf!
 If you don't use `tmux` just remove `tmux neww` and you are good to go.
 
 Don't forget to stop and possibly remove the container.
 ```shell
-$ podman stop firefox-test
+$ podman stop librewolf-test
 ```
 
 Enjoy!

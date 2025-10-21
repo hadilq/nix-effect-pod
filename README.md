@@ -38,17 +38,12 @@ Additionally, you can wire home-manager's configurations into the containers.
 This project can help you with such a task.
 
 Checkout [development pod](https://github.com/hadilq/nix-effect-pod/tree/main/development),
-and [firefox pod](https://github.com/hadilq/nix-effect-pod/tree/main/firefox).
+and [librewolf pod](https://github.com/hadilq/nix-effect-pod/tree/main/librewolf).
 
-Also, I am using it as [my configuration](https://github.com/hadilq/nix-home-manager-config),
+Also, I am using it in [my configuration](https://github.com/hadilq/nix-home-manager-config),
 so there would be some examples and usages.
 
-# Known problems
-There are some FIXME in the code that I have no clue how to solve them!
-Also the `nix-daemond` is not getting run in the `endpoint.sh`. So it may need more investigation.
-
 # Contribution
-
 I wish the code was more concrete, but I admit it's a bit hacky!
 If you know how to fix them,
 feel free to create issues, and pull requests.

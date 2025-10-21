@@ -1,15 +1,12 @@
 {
-  config,
   pkgs,
-  lib,
-  username,
   ...
 }:
 {
 
   imports = [
-    ./../common/vim.nix
-    ./../common/shell-tools.nix
+    ./../modules/vim.nix
+    ./../modules/shell-tools.nix
   ];
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.android_sdk.accept_license = true;
@@ -33,7 +30,7 @@
     dotDir = ".config/zsh";
     enableCompletion = true;
     enableAutosuggestions = true;
-    initExtra = "HISTSIZE=10000";
+    initContent = "HISTSIZE=10000";
 
     oh-my-zsh = {
       enable = true;
