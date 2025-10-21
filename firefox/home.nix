@@ -3,7 +3,8 @@
   pkgs,
   lib,
   ...
-}: {
+}:
+{
   home.packages = with pkgs; [
     nerdfonts
   ];
@@ -22,15 +23,21 @@
         search = {
           force = true;
           default = "DuckDuckGo";
-          order = [ "DuckDuckGo" "Google" ];
+          order = [
+            "DuckDuckGo"
+            "Google"
+          ];
         };
-        settings = {          # specify profile-specific preferences here; check about:config for options
+        settings = {
+          # specify profile-specific preferences here; check about:config for options
           "browser.newtabpage.activity-stream.feeds.section.highlights" = false;
           "browser.startup.homepage" = "https://nixos.org";
-          "browser.newtabpage.pinned" = [{
-            title = "NixOS";
-            url = "https://nixos.org";
-          }];
+          "browser.newtabpage.pinned" = [
+            {
+              title = "NixOS";
+              url = "https://nixos.org";
+            }
+          ];
           "extensions.activeThemeID" = "firefox-compact-dark@mozilla.org";
 
           # For Firefox GNOME theme:
@@ -51,14 +58,15 @@
         settings = {
           "browser.newtabpage.activity-stream.feeds.section.highlights" = true;
           "browser.startup.homepage" = "https://nixos.org";
-          "browser.newtabpage.pinned" = [{
-            title = "NixOS";
-            url = "https://nixos.org";
-          }];
+          "browser.newtabpage.pinned" = [
+            {
+              title = "NixOS";
+              url = "https://nixos.org";
+            }
+          ];
         };
       };
       # add profiles here...
     };
   };
 }
-

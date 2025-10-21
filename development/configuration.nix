@@ -9,7 +9,12 @@
 let
   pod-configs = import ./pod-configs.nix;
   configuration = import ./../configuration.nix {
-    inherit (pod-configs) homeManagerConfigurationSource homeManagerSource username userHome;
+    inherit (pod-configs)
+      homeManagerConfigurationSource
+      homeManagerSource
+      username
+      userHome
+      ;
   };
 in
 {
@@ -19,4 +24,3 @@ in
     zsh.enable = true;
   };
 }
-

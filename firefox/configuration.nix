@@ -9,7 +9,12 @@
 let
   pod-configs = import ./pod-configs.nix;
   configuration = import ./../configuration.nix {
-    inherit (pod-configs) homeManagerConfigurationSource homeManagerSource username userHome;
+    inherit (pod-configs)
+      homeManagerConfigurationSource
+      homeManagerSource
+      username
+      userHome
+      ;
   };
 in
 {
@@ -25,9 +30,11 @@ in
 
   nixpkgs.config.packageOverrides = pkgs: {
     # a commit on master
-    nur = import (builtins.fetchTarball "https://github.com/nix-community/NUR/archive/24492e6349a27e24ad998ad52f8b2e4e95d0eb62.tar.gz") {
-      inherit pkgs;
-    };
+    nur =
+      import
+        (builtins.fetchTarball "https://github.com/nix-community/NUR/archive/24492e6349a27e24ad998ad52f8b2e4e95d0eb62.tar.gz")
+        {
+          inherit pkgs;
+        };
   };
 }
-

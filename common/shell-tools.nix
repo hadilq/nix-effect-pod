@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 {
   programs.zoxide = {
     enable = true;
@@ -15,10 +20,9 @@
     enableBashIntegration = true;
   };
 
-  programs.direnv  = {
+  programs.direnv = {
     enable = true;
     enableZshIntegration = true;
     enableBashIntegration = true;
   };
 }
-

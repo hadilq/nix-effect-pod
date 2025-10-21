@@ -38,18 +38,23 @@
     oh-my-zsh = {
       enable = true;
       theme = "amuse";
-      plugins = [ "git" "docker" "kubectl" ];
+      plugins = [
+        "git"
+        "docker"
+        "kubectl"
+      ];
     };
   };
 
   programs.git = {
     enable = true;
 
-    includes = [{
-      contents = {
-        init.defaultBranch = "main";
-      };
-    }];
+    includes = [
+      {
+        contents = {
+          init.defaultBranch = "main";
+        };
+      }
+    ];
   };
 }
-

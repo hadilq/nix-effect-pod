@@ -1,9 +1,11 @@
-{ homeManagerConfigurationSource
-, homeManagerSource
-, uname
-, userHome
+{
+  homeManagerConfigurationSource,
+  homeManagerSource,
+  uname,
+  userHome,
 }:
-{ pkgs, modulesPath, ... }: {
+{ pkgs, modulesPath, ... }:
+{
   imports = [
     "${toString modulesPath}/virtualisation/docker-image.nix"
     (import "${homeManagerSource}/nixos")
@@ -12,18 +14,20 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    users.${uname} = { ... } :{
-      imports = [
-        (import homeManagerConfigurationSource)
-      ];
+    users.${uname} =
+      { ... }:
+      {
+        imports = [
+          (import homeManagerConfigurationSource)
+        ];
 
-      programs.home-manager.enable = true;
-      programs.bash.enable = true;
-      home.username = uname;
-      home.homeDirectory = userHome;
+        programs.home-manager.enable = true;
+        programs.bash.enable = true;
+        home.username = uname;
+        home.homeDirectory = userHome;
 
-      home.stateVersion = "24.11";
-    };
+        home.stateVersion = "24.11";
+      };
   };
 
   boot.isContainer = true;
