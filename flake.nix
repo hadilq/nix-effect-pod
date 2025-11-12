@@ -13,6 +13,7 @@
     { nixpkgs, home-manager, ... }:
     let
       pod-args = {
+        system = "x86_64-linux";
         nixEffectSource = ./.;
         pkgsSource = "${nixpkgs}";
         homeManagerSource = "${home-manager}";

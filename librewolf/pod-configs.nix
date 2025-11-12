@@ -1,5 +1,4 @@
 let
-  system = "x86_64-linux";
   name = "librewolf-test-machine";
   nixosConfigurationSource = ./configuration.nix;
   homeManagerConfigurationSource = ./home.nix;
@@ -20,7 +19,6 @@ let
 in
 {
   inherit
-    system
     name
     nixosConfigurationSource
     homeManagerConfigurationSource
