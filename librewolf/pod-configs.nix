@@ -1,5 +1,5 @@
 let
-  name = "librewolf-test-machine";
+  name = "librewolf-test-pod";
   nixosConfigurationSource = ./configuration.nix;
   homeManagerConfigurationSource = ./home.nix;
   channelsList = [

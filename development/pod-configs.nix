@@ -4,7 +4,7 @@ let
   pkgsSource = builtins.fetchTarball "https://github.com/NixOS/nixpkgs/archive/057f63b6dc1a2c67301286152eb5af20747a9cb4.tar.gz";
   # release-24.11
   homeManagerSource = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/1bd5616e33c0c54d7a5b37db94160635a9b27aeb.tar.gz";
-  name = "dev-test-machine";
+  name = "dev-test-pod";
   nixosConfigurationSource = ./configuration.nix;
   homeManagerConfigurationSource = ./home.nix;
   channelsList = [
