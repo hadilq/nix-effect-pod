@@ -26,6 +26,7 @@ let
             homeManagerConfigurationSource
             uname
             userHome
+            extraSpecialArgs
             ;
         };
       };

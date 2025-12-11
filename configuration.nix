@@ -14,6 +14,7 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
+    extraSpecialArgs = podConfigs.extraSpecialArgs;
     users.${podConfigs.uname} =
       { ... }:
       {
