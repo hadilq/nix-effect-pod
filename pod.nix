@@ -57,13 +57,7 @@
   gid ? 1000,
   uname ? "dev",
   gname ? "dev",
-  mountingDir ? "",
-  userHome ? (
-    lib.optionalAttrs (lib.length mountingDir != 0) (
-      lib.warn "mountingDir argument is deprecated and will be removed." "/home/dev"
-    )
-  ),
-
+  userHome ? "/home/dev",
 }:
 let
   defaultPkgs =
