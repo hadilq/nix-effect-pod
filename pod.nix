@@ -5,18 +5,18 @@
   pkgsSource,
   homeManagerSource,
   name ? "nix",
-  nixosConfigurationSource,
   etcActivation ? false,
   homeActivation ? false,
   channelsList ? [ ],
   extraSubstituters ? [ ],
   extraTrustedPublicKeys ? [ ],
+  extraSpecialArgs ? { },
   nixpkgs ? (
     let
       eval = import "${pkgsSource}/nixos/lib/eval-config.nix" {
         inherit system;
-        modules = [ (import nixosConfigurationSource) ];
-        specialArgs = { inherit nixEffectSource pkgsSource homeManagerSource; };
+        modules = [ (import ./configuration.nix) ];
+        specialArgs = extraSpecialArgs;
       };
     in
     {

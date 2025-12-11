@@ -12,14 +12,14 @@
   outputs =
     { nixpkgs, home-manager, ... }:
     let
-      pod-args = {
+      pod-configs = {
         system = "x86_64-linux";
         nixEffectSource = ./.;
         pkgsSource = "${nixpkgs}";
         homeManagerSource = "${home-manager}";
       };
-      development-pod = import ./development/pod.nix pod-args;
-      librewolf-pod = import ./librewolf/pod.nix pod-args;
+      development-pod = import ./modules/pod.nix (pod-configs // import ./development/pod-configs.nix);
+      librewolf-pod = import ./modules/pod.nix (pod-configs // import ./librewolf/pod-configs.nix);
     in
     {
       formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;

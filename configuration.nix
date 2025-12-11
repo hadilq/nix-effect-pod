@@ -1,30 +1,30 @@
 {
-  homeManagerConfigurationSource,
-  homeManagerSource,
-  uname,
-  userHome,
+  pkgs,
+  modulesPath,
+  podConfigs,
+  ...
 }:
-{ pkgs, modulesPath, ... }:
 {
   imports = [
+    (import podConfigs.nixosConfigurationSource)
     "${toString modulesPath}/virtualisation/docker-image.nix"
-    (import "${homeManagerSource}/nixos")
+    (import "${podConfigs.homeManagerSource}/nixos")
   ];
 
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    users.${uname} =
+    users.${podConfigs.uname} =
       { ... }:
       {
         imports = [
-          (import homeManagerConfigurationSource)
+          (import podConfigs.homeManagerConfigurationSource)
         ];
 
         programs.home-manager.enable = true;
         programs.bash.enable = true;
-        home.username = uname;
-        home.homeDirectory = userHome;
+        home.username = podConfigs.uname;
+        home.homeDirectory = podConfigs.userHome;
 
         home.stateVersion = "24.11";
       };
@@ -45,9 +45,9 @@
   users = {
     mutableUsers = true;
     users = {
-      ${uname} = {
+      ${podConfigs.uname} = {
         isNormalUser = true;
-        home = userHome;
+        home = podConfigs.userHome;
         description = "Development";
         extraGroups = [ ];
         shell = pkgs.bashInteractive;
